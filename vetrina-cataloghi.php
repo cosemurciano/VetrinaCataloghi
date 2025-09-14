@@ -186,6 +186,37 @@ function vc_admin_scripts( $hook ) {
 add_action( 'admin_enqueue_scripts', 'vc_admin_scripts' );
 
 /**
+ * Adds featured image thumbnail column to catalog list.
+ *
+ * @param array $columns Existing columns.
+ * @return array Modified columns with thumbnail.
+ */
+function vc_add_thumbnail_column( $columns ) {
+    $new = array();
+    if ( isset( $columns['cb'] ) ) {
+        $new['cb'] = $columns['cb'];
+        unset( $columns['cb'] );
+    }
+    $new['vc_thumbnail'] = __( 'Miniatura', 'vetrina-cataloghi' );
+    return array_merge( $new, $columns );
+}
+add_filter( 'manage_edit-vetrina_catalogo_columns', 'vc_add_thumbnail_column' );
+
+/**
+ * Renders the featured image thumbnail column.
+ *
+ * @param string $column  Column name.
+ * @param int    $post_id Post ID.
+ */
+function vc_render_thumbnail_column( $column, $post_id ) {
+    if ( 'vc_thumbnail' === $column ) {
+        $thumb = get_the_post_thumbnail( $post_id, array( 60, 60 ) );
+        echo $thumb ? $thumb : '&mdash;';
+    }
+}
+add_action( 'manage_vetrina_catalogo_posts_custom_column', 'vc_render_thumbnail_column', 10, 2 );
+
+/**
  * Flush rewrite rules on activation.
  */
 function vc_activate_plugin() {
