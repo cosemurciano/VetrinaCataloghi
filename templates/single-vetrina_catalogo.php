@@ -1,11 +1,9 @@
 <?php
 /**
- * Template for single catalogo posts with PDF.js viewer.
+ * Template for single catalogo posts with PDF.js viewer without theme header and footer.
  *
  * @package VetrinaCataloghi
  */
-
-get_header();
 
 $options   = get_option( 'vc_pdfjs_options', array() );
 $logo_id   = isset( $options['logo_id'] ) ? intval( $options['logo_id'] ) : 0;
@@ -15,21 +13,30 @@ $params    = isset( $options['viewer_params'] ) ? $options['viewer_params'] : ''
 $pdf_id    = get_post_meta( get_the_ID(), '_vc_pdf_id', true );
 $pdf_url   = $pdf_id ? wp_get_attachment_url( $pdf_id ) : '';
 ?>
-<div class="vc-pdfjs-wrapper">
-    <div class="vc-pdfjs-sidebar">
-        <?php if ( $logo_url ) : ?>
-            <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" class="vc-logo" />
-        <?php endif; ?>
-        <h1 class="vc-title"><?php the_title(); ?></h1>
-        <div class="vc-content"><?php the_content(); ?></div>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+    <meta charset="<?php bloginfo( 'charset' ); ?>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <?php wp_head(); ?>
+</head>
+<body <?php body_class(); ?>>
+    <div class="vc-pdfjs-wrapper">
+        <div class="vc-pdfjs-sidebar">
+            <?php if ( $logo_url ) : ?>
+                <img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" class="vc-logo" />
+            <?php endif; ?>
+            <h1 class="vc-title"><?php the_title(); ?></h1>
+            <div class="vc-content"><?php the_content(); ?></div>
+        </div>
+        <div class="vc-pdfjs-viewer">
+            <?php if ( $pdf_url ) : ?>
+                <iframe src="<?php echo esc_url( $viewer . '?file=' . rawurlencode( $pdf_url ) . $params ); ?>"></iframe>
+            <?php else : ?>
+                <p><?php esc_html_e( 'PDF non disponibile.', 'vetrina-cataloghi' ); ?></p>
+            <?php endif; ?>
+        </div>
     </div>
-    <div class="vc-pdfjs-viewer">
-        <?php if ( $pdf_url ) : ?>
-            <iframe src="<?php echo esc_url( $viewer . '?file=' . rawurlencode( $pdf_url ) . $params ); ?>"></iframe>
-        <?php else : ?>
-            <p><?php esc_html_e( 'PDF non disponibile.', 'vetrina-cataloghi' ); ?></p>
-        <?php endif; ?>
-    </div>
-</div>
-<?php
-get_footer();
+    <?php wp_footer(); ?>
+</body>
+</html>
