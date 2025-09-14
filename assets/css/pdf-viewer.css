@@ -1,0 +1,6 @@
+.vc-pdfjs-wrapper{display:flex;height:100vh;}
+.vc-pdfjs-sidebar{width:20%;padding:20px;box-sizing:border-box;overflow:auto;}
+.vc-pdfjs-viewer{width:80%;}
+.vc-pdfjs-viewer iframe{width:100%;height:100vh;border:none;}
+.vc-logo{max-width:100%;height:auto;margin-bottom:20px;}
+.vc-title{margin-top:0;}
