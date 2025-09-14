@@ -5,6 +5,9 @@
 .vc-logo{max-width:100%;height:auto;margin-bottom:20px;}
 .vc-title{margin-top:0;}
 body{margin:0;}
+@media(max-width:767px){
+    .vc-pdfjs-viewer iframe{height:60vh;}
+}
 @media(min-width:768px){
     .vc-pdfjs-wrapper{flex-direction:row;}
     .vc-pdfjs-viewer{width:80%;}
