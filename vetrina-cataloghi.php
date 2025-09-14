@@ -284,8 +284,12 @@ add_action( 'admin_init', 'vc_register_settings' );
  */
 function vc_sanitize_options( $input ) {
     $output = array();
-    $output['viewer_params'] = isset( $input['viewer_params'] ) ? sanitize_text_field( $input['viewer_params'] ) : '';
+    $available_features = array( 'toolbar', 'navpanes', 'download', 'print', 'openfile', 'viewBookmark', 'secondaryToolbar' );
     $output['logo_id']       = isset( $input['logo_id'] ) ? intval( $input['logo_id'] ) : 0;
+    $output['features']      = array();
+    foreach ( $available_features as $feature ) {
+        $output['features'][ $feature ] = ! empty( $input['features'][ $feature ] ) ? 1 : 0;
+    }
     return $output;
 }
 
@@ -311,7 +315,16 @@ function vc_render_settings_page() {
     $options   = get_option( 'vc_pdfjs_options', array() );
     $logo_id   = isset( $options['logo_id'] ) ? intval( $options['logo_id'] ) : 0;
     $logo_url  = $logo_id ? wp_get_attachment_url( $logo_id ) : '';
-    $params     = isset( $options['viewer_params'] ) ? esc_attr( $options['viewer_params'] ) : '';
+    $features  = isset( $options['features'] ) ? (array) $options['features'] : array();
+    $available_features = array(
+        'toolbar'          => __( 'Toolbar', 'vetrina-cataloghi' ),
+        'navpanes'         => __( 'Pannello di navigazione', 'vetrina-cataloghi' ),
+        'download'         => __( 'Download', 'vetrina-cataloghi' ),
+        'print'            => __( 'Stampa', 'vetrina-cataloghi' ),
+        'openfile'         => __( 'Apri file', 'vetrina-cataloghi' ),
+        'viewBookmark'     => __( 'Segnalibro', 'vetrina-cataloghi' ),
+        'secondaryToolbar' => __( 'Toolbar secondaria', 'vetrina-cataloghi' ),
+    );
     ?>
     <div class="wrap">
         <h1><?php esc_html_e( 'Impostazioni PDF.js Viewer', 'vetrina-cataloghi' ); ?></h1>
@@ -319,9 +332,17 @@ function vc_render_settings_page() {
             <?php settings_fields( 'vc_pdfjs_settings' ); ?>
             <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><label for="vc-viewer-params"><?php esc_html_e( 'Parametri viewer', 'vetrina-cataloghi' ); ?></label></th>
-                    <td><input type="text" id="vc-viewer-params" name="vc_pdfjs_options[viewer_params]" value="<?php echo $params; ?>" class="regular-text" />
-                        <p class="description"><?php esc_html_e( 'Esempio: #zoom=page-width&toolbar=1', 'vetrina-cataloghi' ); ?></p>
+                    <th scope="row"><?php esc_html_e( 'Funzionalità PDF.js', 'vetrina-cataloghi' ); ?></th>
+                    <td>
+                        <div class="vc-pdfjs-features">
+                        <?php foreach ( $available_features as $key => $label ) : ?>
+                            <label>
+                                <input type="checkbox" name="vc_pdfjs_options[features][<?php echo esc_attr( $key ); ?>]" value="1" <?php checked( ! isset( $features[ $key ] ) || $features[ $key ] ); ?> />
+                                <?php echo esc_html( $label ); ?>
+                            </label>
+                        <?php endforeach; ?>
+                        </div>
+                        <p class="description"><?php esc_html_e( 'Seleziona le funzionalità da abilitare.', 'vetrina-cataloghi' ); ?></p>
                     </td>
                 </tr>
                 <tr>
@@ -365,6 +386,10 @@ function vc_render_settings_page() {
         });
     });
     </script>
+    <style>
+    .vc-pdfjs-features{display:flex;flex-wrap:wrap;}
+    .vc-pdfjs-features label{width:33%;margin-bottom:8px;}
+    </style>
     <?php
 }
 
