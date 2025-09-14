@@ -354,11 +354,21 @@ function vc_sanitize_css( $css ) {
 function vc_add_settings_page() {
     add_submenu_page(
         'edit.php?post_type=vetrina_catalogo',
+        __( 'Shortcode Cataloghi', 'vetrina-cataloghi' ),
+        __( 'Shortcode Cataloghi', 'vetrina-cataloghi' ),
+        'manage_options',
+        'vc-shortcode-generator',
+        'vc_render_shortcode_page',
+        20
+    );
+    add_submenu_page(
+        'edit.php?post_type=vetrina_catalogo',
         __( 'Impostazioni PDF.js', 'vetrina-cataloghi' ),
         __( 'PDF.js Viewer', 'vetrina-cataloghi' ),
         'manage_options',
         'vc-pdfjs-settings',
-        'vc_render_settings_page'
+        'vc_render_settings_page',
+        30
     );
     add_submenu_page(
         'edit.php?post_type=vetrina_catalogo',
@@ -366,18 +376,11 @@ function vc_add_settings_page() {
         __( 'CSS Template', 'vetrina-cataloghi' ),
         'manage_options',
         'vc-css-template',
-        'vc_render_css_page'
-    );
-    add_submenu_page(
-        'edit.php?post_type=vetrina_catalogo',
-        __( 'Shortcode Cataloghi', 'vetrina-cataloghi' ),
-        __( 'Shortcode Cataloghi', 'vetrina-cataloghi' ),
-        'manage_options',
-        'vc-shortcode-generator',
-        'vc_render_shortcode_page'
+        'vc_render_css_page',
+        40
     );
 }
-add_action( 'admin_menu', 'vc_add_settings_page' );
+add_action( 'admin_menu', 'vc_add_settings_page', 20 );
 
 /**
  * Render settings page.
