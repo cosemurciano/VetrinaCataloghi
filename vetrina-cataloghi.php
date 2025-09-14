@@ -368,6 +368,14 @@ function vc_add_settings_page() {
         'vc-css-template',
         'vc_render_css_page'
     );
+    add_submenu_page(
+        'edit.php?post_type=vetrina_catalogo',
+        __( 'Shortcode Cataloghi', 'vetrina-cataloghi' ),
+        __( 'Shortcode Cataloghi', 'vetrina-cataloghi' ),
+        'manage_options',
+        'vc-shortcode-generator',
+        'vc_render_shortcode_page'
+    );
 }
 add_action( 'admin_menu', 'vc_add_settings_page' );
 
@@ -470,6 +478,76 @@ function vc_render_css_page() {
             <?php submit_button(); ?>
         </form>
     </div>
+    <?php
+}
+
+/**
+ * Render shortcode generator page.
+ */
+function vc_render_shortcode_page() {
+    $categories = get_terms(
+        array(
+            'taxonomy'   => 'categoria_cataloghi',
+            'hide_empty' => false,
+        )
+    );
+    ?>
+    <div class="wrap">
+        <h1><?php esc_html_e( 'Generatore Shortcode Cataloghi', 'vetrina-cataloghi' ); ?></h1>
+        <table class="form-table">
+            <tr>
+                <th scope="row"><label for="vc_sc_categoria"><?php esc_html_e( 'Categoria', 'vetrina-cataloghi' ); ?></label></th>
+                <td>
+                    <select id="vc_sc_categoria">
+                        <option value=""><?php esc_html_e( 'Tutte', 'vetrina-cataloghi' ); ?></option>
+                        <?php foreach ( $categories as $cat ) : ?>
+                            <option value="<?php echo esc_attr( $cat->slug ); ?>"><?php echo esc_html( $cat->name ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="vc_sc_numero"><?php esc_html_e( 'Numero', 'vetrina-cataloghi' ); ?></label></th>
+                <td>
+                    <input type="number" id="vc_sc_numero" value="" min="1" />
+                    <p class="description"><?php esc_html_e( 'Lascia vuoto o usa "tutti" per mostrare tutti i cataloghi.', 'vetrina-cataloghi' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="vc_sc_per_riga"><?php esc_html_e( 'Cataloghi per riga', 'vetrina-cataloghi' ); ?></label></th>
+                <td><input type="number" id="vc_sc_per_riga" value="3" min="1" /></td>
+            </tr>
+        </table>
+        <h2><?php esc_html_e( 'Shortcode generato', 'vetrina-cataloghi' ); ?></h2>
+        <input type="text" id="vc_sc_output" class="large-text code" readonly value="[vc_cataloghi]" />
+    </div>
+    <script>
+    (function($){
+        function updateShortcode(){
+            var categoria = $('#vc_sc_categoria').val();
+            var numero = $('#vc_sc_numero').val();
+            var perRiga = $('#vc_sc_per_riga').val();
+            var parts = [];
+            if(categoria){
+                parts.push('categoria="'+categoria+'"');
+            }
+            if(numero){
+                parts.push('numero="'+numero+'"');
+            }
+            if(perRiga){
+                parts.push('per_riga="'+perRiga+'"');
+            }
+            var shortcode = '[vc_cataloghi';
+            if(parts.length){
+                shortcode += ' '+parts.join(' ');
+            }
+            shortcode += ']';
+            $('#vc_sc_output').val(shortcode);
+        }
+        $('#vc_sc_categoria, #vc_sc_numero, #vc_sc_per_riga').on('change keyup', updateShortcode);
+        updateShortcode();
+    })(jQuery);
+    </script>
     <?php
 }
 
