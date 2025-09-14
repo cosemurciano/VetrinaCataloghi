@@ -473,4 +473,83 @@ function vc_render_css_page() {
     <?php
 }
 
+/**
+ * Shortcode to display a list of cataloghi.
+ *
+ * Usage: [vc_cataloghi categoria="slug" numero="5" per_riga="3"]
+ *
+ * @param array $atts Shortcode attributes.
+ * @return string HTML output for the catalog list.
+ */
+function vc_cataloghi_shortcode( $atts = array() ) {
+    $atts = shortcode_atts(
+        array(
+            'categoria' => '',
+            'numero'    => 'tutti',
+            'per_riga'  => 3,
+        ),
+        $atts,
+        'vc_cataloghi'
+    );
+
+    $posts_per_page = -1;
+    if ( ! in_array( strtolower( $atts['numero'] ), array( 'tutti', 'all', '' ), true ) ) {
+        $posts_per_page = intval( $atts['numero'] );
+        if ( $posts_per_page <= 0 ) {
+            $posts_per_page = -1;
+        }
+    }
+
+    $args = array(
+        'post_type'      => 'vetrina_catalogo',
+        'posts_per_page' => $posts_per_page,
+    );
+
+    if ( ! empty( $atts['categoria'] ) ) {
+        $args['tax_query'] = array(
+            array(
+                'taxonomy' => 'categoria_cataloghi',
+                'field'    => 'slug',
+                'terms'    => array_map( 'sanitize_title', array_map( 'trim', explode( ',', $atts['categoria'] ) ) ),
+            ),
+        );
+    }
+
+    $query = new WP_Query( $args );
+    if ( ! $query->have_posts() ) {
+        wp_reset_postdata();
+        return '';
+    }
+
+    wp_enqueue_style(
+        'vc-cataloghi-shortcode',
+        plugin_dir_url( __FILE__ ) . 'assets/css/cataloghi-shortcode.css',
+        array(),
+        '1.0.0'
+    );
+
+    $columns = max( 1, intval( $atts['per_riga'] ) );
+    $output  = '<div class="vc-cataloghi-grid" style="--vc-columns:' . esc_attr( $columns ) . ';">';
+
+    while ( $query->have_posts() ) {
+        $query->the_post();
+        $pdf_id = get_post_meta( get_the_ID(), '_vc_pdf_id', true );
+        $link   = $pdf_id ? wp_get_attachment_url( $pdf_id ) : get_permalink();
+        $output .= '<div class="vc-cataloghi-item">';
+        if ( has_post_thumbnail() ) {
+            $output .= '<a href="' . esc_url( $link ) . '" target="_blank" rel="noopener">' .
+                get_the_post_thumbnail( get_the_ID(), 'medium' ) . '</a>';
+        }
+        $output .= '<h3><a href="' . esc_url( $link ) . '" target="_blank" rel="noopener">' .
+            esc_html( get_the_title() ) . '</a></h3>';
+        $output .= '</div>';
+    }
+
+    $output .= '</div>';
+    wp_reset_postdata();
+
+    return $output;
+}
+add_shortcode( 'vc_cataloghi', 'vc_cataloghi_shortcode' );
+
 
