@@ -10,7 +10,7 @@ $logo_id   = isset( $options['logo_id'] ) ? intval( $options['logo_id'] ) : 0;
 $logo_url  = $logo_id ? wp_get_attachment_image_url( $logo_id, 'full' ) : '';
 $params    = isset( $options['viewer_params'] ) ? $options['viewer_params'] : '';
 // Use the bundled PDF.js viewer directly from the plugin.
-$viewer    = plugins_url( 'pdfjs-5-4-149/web/viewer.html', dirname( __FILE__, 2 ) );
+$viewer    = plugins_url( 'pdfjs-5-4-149/web/viewer.html', plugin_dir_path( __DIR__ ) . 'vetrina-cataloghi.php' );
 $pdf_id    = get_post_meta( get_the_ID(), '_vc_pdf_id', true );
 $pdf_url   = $pdf_id ? wp_get_attachment_url( $pdf_id ) : '';
 
