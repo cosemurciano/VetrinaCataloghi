@@ -312,7 +312,7 @@ function vc_render_settings_page() {
     $options   = get_option( 'vc_pdfjs_options', array() );
     $logo_id   = isset( $options['logo_id'] ) ? intval( $options['logo_id'] ) : 0;
     $logo_url  = $logo_id ? wp_get_attachment_url( $logo_id ) : '';
-    $viewer_url = isset( $options['viewer_url'] ) ? esc_url( $options['viewer_url'] ) : 'https://mozilla.github.io/pdf.js/web/viewer.html';
+    $viewer_url = isset( $options['viewer_url'] ) ? esc_url( $options['viewer_url'] ) : '';
     $params     = isset( $options['viewer_params'] ) ? esc_attr( $options['viewer_params'] ) : '';
     ?>
     <div class="wrap">

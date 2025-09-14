@@ -8,10 +8,14 @@
 $options   = get_option( 'vc_pdfjs_options', array() );
 $logo_id   = isset( $options['logo_id'] ) ? intval( $options['logo_id'] ) : 0;
 $logo_url  = $logo_id ? wp_get_attachment_image_url( $logo_id, 'full' ) : '';
-$viewer    = isset( $options['viewer_url'] ) ? $options['viewer_url'] : 'https://mozilla.github.io/pdf.js/web/viewer.html';
+$viewer    = isset( $options['viewer_url'] ) ? $options['viewer_url'] : '';
 $params    = isset( $options['viewer_params'] ) ? $options['viewer_params'] : '';
 $pdf_id    = get_post_meta( get_the_ID(), '_vc_pdf_id', true );
 $pdf_url   = $pdf_id ? wp_get_attachment_url( $pdf_id ) : '';
+$iframe_src = $pdf_url;
+if ( $viewer && $pdf_url ) {
+    $iframe_src = $viewer . '?file=' . rawurlencode( $pdf_url ) . $params;
+}
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -31,7 +35,7 @@ $pdf_url   = $pdf_id ? wp_get_attachment_url( $pdf_id ) : '';
         </div>
         <div class="vc-pdfjs-viewer">
             <?php if ( $pdf_url ) : ?>
-                <iframe src="<?php echo esc_url( $viewer . '?file=' . rawurlencode( $pdf_url ) . $params ); ?>"></iframe>
+                <iframe src="<?php echo esc_url( $iframe_src ); ?>"></iframe>
             <?php else : ?>
                 <p><?php esc_html_e( 'PDF non disponibile.', 'vetrina-cataloghi' ); ?></p>
             <?php endif; ?>
