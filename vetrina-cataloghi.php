@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Vetrina Cataloghi
  * Description: Gestisce un custom post type "Vetrina Cataloghi" con categorie e upload di file PDF.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: OpenAI ChatGPT
  */
 
@@ -179,7 +179,10 @@ add_action( 'save_post', 'vc_save_pdf_meta' );
  */
 function vc_admin_scripts( $hook ) {
     global $post_type;
-    if ( in_array( $hook, array( 'post-new.php', 'post.php' ), true ) && 'vetrina_catalogo' === $post_type ) {
+    if (
+        ( in_array( $hook, array( 'post-new.php', 'post.php' ), true ) && 'vetrina_catalogo' === $post_type ) ||
+        'vetrina_catalogo_page_vc-pdfjs-settings' === $hook
+    ) {
         wp_enqueue_media();
     }
 }
@@ -232,4 +235,143 @@ function vc_deactivate_plugin() {
     flush_rewrite_rules();
 }
 register_deactivation_hook( __FILE__, 'vc_deactivate_plugin' );
+
+/**
+ * Enqueue frontend assets for PDF viewer.
+ */
+function vc_enqueue_frontend_assets() {
+    if ( is_singular( 'vetrina_catalogo' ) ) {
+        wp_enqueue_style(
+            'vc-pdf-viewer',
+            plugin_dir_url( __FILE__ ) . 'assets/css/pdf-viewer.css',
+            array(),
+            '1.0.0'
+        );
+    }
+}
+add_action( 'wp_enqueue_scripts', 'vc_enqueue_frontend_assets' );
+
+/**
+ * Load custom template for catalog post type.
+ *
+ * @param string $template Current template.
+ * @return string Template path.
+ */
+function vc_single_template( $template ) {
+    if ( is_singular( 'vetrina_catalogo' ) ) {
+        $custom = plugin_dir_path( __FILE__ ) . 'templates/single-vetrina_catalogo.php';
+        if ( file_exists( $custom ) ) {
+            return $custom;
+        }
+    }
+    return $template;
+}
+add_filter( 'single_template', 'vc_single_template' );
+
+/**
+ * Register settings for PDF.js viewer.
+ */
+function vc_register_settings() {
+    register_setting( 'vc_pdfjs_settings', 'vc_pdfjs_options', 'vc_sanitize_options' );
+}
+add_action( 'admin_init', 'vc_register_settings' );
+
+/**
+ * Sanitize settings values.
+ *
+ * @param array $input Raw input.
+ * @return array Sanitized values.
+ */
+function vc_sanitize_options( $input ) {
+    $output = array();
+    $output['viewer_url']    = isset( $input['viewer_url'] ) ? esc_url_raw( $input['viewer_url'] ) : '';
+    $output['viewer_params'] = isset( $input['viewer_params'] ) ? sanitize_text_field( $input['viewer_params'] ) : '';
+    $output['logo_id']       = isset( $input['logo_id'] ) ? intval( $input['logo_id'] ) : 0;
+    return $output;
+}
+
+/**
+ * Add settings page to admin menu.
+ */
+function vc_add_settings_page() {
+    add_submenu_page(
+        'edit.php?post_type=vetrina_catalogo',
+        __( 'Impostazioni PDF.js', 'vetrina-cataloghi' ),
+        __( 'PDF.js Viewer', 'vetrina-cataloghi' ),
+        'manage_options',
+        'vc-pdfjs-settings',
+        'vc_render_settings_page'
+    );
+}
+add_action( 'admin_menu', 'vc_add_settings_page' );
+
+/**
+ * Render settings page.
+ */
+function vc_render_settings_page() {
+    $options   = get_option( 'vc_pdfjs_options', array() );
+    $logo_id   = isset( $options['logo_id'] ) ? intval( $options['logo_id'] ) : 0;
+    $logo_url  = $logo_id ? wp_get_attachment_url( $logo_id ) : '';
+    $viewer_url = isset( $options['viewer_url'] ) ? esc_url( $options['viewer_url'] ) : 'https://mozilla.github.io/pdf.js/web/viewer.html';
+    $params     = isset( $options['viewer_params'] ) ? esc_attr( $options['viewer_params'] ) : '';
+    ?>
+    <div class="wrap">
+        <h1><?php esc_html_e( 'Impostazioni PDF.js Viewer', 'vetrina-cataloghi' ); ?></h1>
+        <form method="post" action="options.php">
+            <?php settings_fields( 'vc_pdfjs_settings' ); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="vc-viewer-url"><?php esc_html_e( 'URL viewer PDF.js', 'vetrina-cataloghi' ); ?></label></th>
+                    <td><input type="text" id="vc-viewer-url" name="vc_pdfjs_options[viewer_url]" value="<?php echo esc_attr( $viewer_url ); ?>" class="regular-text" /></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="vc-viewer-params"><?php esc_html_e( 'Parametri viewer', 'vetrina-cataloghi' ); ?></label></th>
+                    <td><input type="text" id="vc-viewer-params" name="vc_pdfjs_options[viewer_params]" value="<?php echo $params; ?>" class="regular-text" />
+                        <p class="description"><?php esc_html_e( 'Esempio: #zoom=page-width&toolbar=1', 'vetrina-cataloghi' ); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Logo', 'vetrina-cataloghi' ); ?></th>
+                    <td>
+                        <img id="vc-logo-preview" src="<?php echo esc_url( $logo_url ); ?>" style="max-width:150px;<?php echo $logo_url ? '' : 'display:none;'; ?>" alt="" />
+                        <input type="hidden" id="vc-logo-id" name="vc_pdfjs_options[logo_id]" value="<?php echo esc_attr( $logo_id ); ?>" />
+                        <p>
+                            <button type="button" class="button" id="vc-upload-logo"><?php esc_html_e( 'Carica logo', 'vetrina-cataloghi' ); ?></button>
+                            <button type="button" class="button" id="vc-remove-logo" <?php echo $logo_url ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Rimuovi', 'vetrina-cataloghi' ); ?></button>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button(); ?>
+        </form>
+    </div>
+    <script>
+    jQuery(document).ready(function($){
+        var frame;
+        $('#vc-upload-logo').on('click', function(e){
+            e.preventDefault();
+            if(frame){frame.open();return;}
+            frame = wp.media({
+                title: '<?php esc_html_e( 'Seleziona o carica logo', 'vetrina-cataloghi' ); ?>',
+                button: { text: '<?php esc_html_e( 'Usa questo logo', 'vetrina-cataloghi' ); ?>' },
+                multiple: false
+            });
+            frame.on('select', function(){
+                var attachment = frame.state().get('selection').first().toJSON();
+                $('#vc-logo-id').val(attachment.id);
+                $('#vc-logo-preview').attr('src', attachment.url).show();
+                $('#vc-remove-logo').show();
+            });
+            frame.open();
+        });
+        $('#vc-remove-logo').on('click', function(){
+            $('#vc-logo-id').val('');
+            $('#vc-logo-preview').hide();
+            $(this).hide();
+        });
+    });
+    </script>
+    <?php
+}
+
 
