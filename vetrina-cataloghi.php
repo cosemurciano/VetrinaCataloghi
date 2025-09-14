@@ -185,6 +185,15 @@ function vc_admin_scripts( $hook ) {
     ) {
         wp_enqueue_media();
     }
+    if ( 'vetrina_catalogo_page_vc-css-template' === $hook ) {
+        $cm_settings = wp_enqueue_code_editor( array( 'type' => 'text/css' ) );
+        if ( $cm_settings ) {
+            wp_add_inline_script(
+                'code-editor',
+                sprintf( 'jQuery(function(){ wp.codeEditor.initialize( "vc_template_css", %s ); });', wp_json_encode( $cm_settings ) )
+            );
+        }
+    }
 }
 add_action( 'admin_enqueue_scripts', 'vc_admin_scripts' );
 
@@ -247,6 +256,10 @@ function vc_enqueue_frontend_assets() {
             array(),
             '1.0.0'
         );
+        $custom_css = get_option( 'vc_template_css', '' );
+        if ( ! empty( $custom_css ) ) {
+            wp_add_inline_style( 'vc-pdf-viewer', $custom_css );
+        }
     }
 }
 add_action( 'wp_enqueue_scripts', 'vc_enqueue_frontend_assets' );
@@ -273,6 +286,7 @@ add_filter( 'single_template', 'vc_single_template' );
  */
 function vc_register_settings() {
     register_setting( 'vc_pdfjs_settings', 'vc_pdfjs_options', 'vc_sanitize_options' );
+    register_setting( 'vc_css_settings', 'vc_template_css', 'vc_sanitize_css' );
 }
 add_action( 'admin_init', 'vc_register_settings' );
 
@@ -294,6 +308,16 @@ function vc_sanitize_options( $input ) {
 }
 
 /**
+ * Sanitize custom CSS.
+ *
+ * @param string $css Raw CSS.
+ * @return string Sanitized CSS.
+ */
+function vc_sanitize_css( $css ) {
+    return wp_strip_all_tags( $css );
+}
+
+/**
  * Add settings page to admin menu.
  */
 function vc_add_settings_page() {
@@ -304,6 +328,14 @@ function vc_add_settings_page() {
         'manage_options',
         'vc-pdfjs-settings',
         'vc_render_settings_page'
+    );
+    add_submenu_page(
+        'edit.php?post_type=vetrina_catalogo',
+        __( 'CSS Template', 'vetrina-cataloghi' ),
+        __( 'CSS Template', 'vetrina-cataloghi' ),
+        'manage_options',
+        'vc-css-template',
+        'vc_render_css_page'
     );
 }
 add_action( 'admin_menu', 'vc_add_settings_page' );
@@ -390,6 +422,23 @@ function vc_render_settings_page() {
     .vc-pdfjs-features{display:flex;flex-wrap:wrap;}
     .vc-pdfjs-features label{width:33%;margin-bottom:8px;}
     </style>
+    <?php
+}
+
+/**
+ * Render custom CSS settings page.
+ */
+function vc_render_css_page() {
+    $css = get_option( 'vc_template_css', '' );
+    ?>
+    <div class="wrap">
+        <h1><?php esc_html_e( 'CSS Template', 'vetrina-cataloghi' ); ?></h1>
+        <form method="post" action="options.php">
+            <?php settings_fields( 'vc_css_settings' ); ?>
+            <textarea id="vc_template_css" name="vc_template_css" rows="20" class="large-text code"><?php echo esc_textarea( $css ); ?></textarea>
+            <?php submit_button(); ?>
+        </form>
+    </div>
     <?php
 }
 

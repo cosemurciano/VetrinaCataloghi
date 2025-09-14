@@ -783,5 +783,46 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     </div> <!-- outerContainer -->
     <div id="printContainer"></div>
+    <script>
+      (function() {
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const hide = id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.style.display = 'none';
+          }
+        };
+        if (params.get('toolbar') === '0') {
+          const toolbar = document.querySelector('.toolbar');
+          if (toolbar) {
+            toolbar.style.display = 'none';
+          }
+        }
+        if (params.get('navpanes') === '0') {
+          hide('sidebarContainer');
+          hide('toolbarSidebar');
+          hide('sidebarToggleButton');
+        }
+        if (params.get('download') === '0') {
+          hide('downloadButton');
+          hide('secondaryDownload');
+        }
+        if (params.get('print') === '0') {
+          hide('printButton');
+          hide('secondaryPrint');
+        }
+        if (params.get('openfile') === '0') {
+          hide('secondaryOpenFile');
+        }
+        if (params.get('viewBookmark') === '0') {
+          hide('viewBookmark');
+          hide('viewBookmarkSeparator');
+        }
+        if (params.get('secondaryToolbar') === '0') {
+          hide('secondaryToolbarToggle');
+          hide('secondaryToolbar');
+        }
+      })();
+    </script>
   </body>
 </html>
