@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Vetrina Cataloghi
  * Description: Gestisce un custom post type "Vetrina Cataloghi" con categorie e upload di file PDF.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: OpenAI ChatGPT
  */
 
@@ -488,6 +488,7 @@ function vc_render_css_page() {
  * Render shortcode generator page.
  */
 function vc_render_shortcode_page() {
+    wp_enqueue_style( 'dashicons' );
     $categories = get_terms(
         array(
             'taxonomy'   => 'categoria_cataloghi',
@@ -522,7 +523,12 @@ function vc_render_shortcode_page() {
             </tr>
         </table>
         <h2><?php esc_html_e( 'Shortcode generato', 'vetrina-cataloghi' ); ?></h2>
-        <input type="text" id="vc_sc_output" class="large-text code" readonly value="[vc_cataloghi]" />
+        <div style="display:flex;align-items:center;">
+            <input type="text" id="vc_sc_output" class="large-text code" readonly value="[vc_cataloghi]" />
+            <button type="button" id="vc_sc_copy" class="button" style="margin-left:5px;" title="<?php esc_attr_e( 'Copia shortcode', 'vetrina-cataloghi' ); ?>">
+                <span class="dashicons dashicons-clipboard"></span>
+            </button>
+        </div>
     </div>
     <script>
     (function($){
@@ -549,6 +555,19 @@ function vc_render_shortcode_page() {
         }
         $('#vc_sc_categoria, #vc_sc_numero, #vc_sc_per_riga').on('change keyup', updateShortcode);
         updateShortcode();
+
+        $('#vc_sc_copy').on('click', function(){
+            var shortcode = $('#vc_sc_output').val();
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shortcode);
+            } else {
+                var temp = $('<input>');
+                $('body').append(temp);
+                temp.val(shortcode).select();
+                document.execCommand('copy');
+                temp.remove();
+            }
+        });
     })(jQuery);
     </script>
     <?php
@@ -614,14 +633,13 @@ function vc_cataloghi_shortcode( $atts = array() ) {
 
     while ( $query->have_posts() ) {
         $query->the_post();
-        $pdf_id = get_post_meta( get_the_ID(), '_vc_pdf_id', true );
-        $link   = $pdf_id ? wp_get_attachment_url( $pdf_id ) : get_permalink();
+        $link   = get_permalink();
         $output .= '<div class="vc-cataloghi-item">';
         if ( has_post_thumbnail() ) {
-            $output .= '<a href="' . esc_url( $link ) . '" target="_blank" rel="noopener">' .
+            $output .= '<a href="' . esc_url( $link ) . '">' .
                 get_the_post_thumbnail( get_the_ID(), 'medium' ) . '</a>';
         }
-        $output .= '<h3><a href="' . esc_url( $link ) . '" target="_blank" rel="noopener">' .
+        $output .= '<h3><a href="' . esc_url( $link ) . '">' .
             esc_html( get_the_title() ) . '</a></h3>';
         $output .= '</div>';
     }

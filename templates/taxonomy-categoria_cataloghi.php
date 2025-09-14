@@ -20,10 +20,10 @@ get_header();
 <div class="vc-cataloghi-grid">
 <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
     <div class="vc-cataloghi-item">
-        <a href="<?php the_permalink(); ?>" target="_blank" rel="noopener">
+        <a href="<?php the_permalink(); ?>">
             <?php if ( has_post_thumbnail() ) { the_post_thumbnail( 'medium' ); } ?>
         </a>
-        <h3><a href="<?php the_permalink(); ?>" target="_blank" rel="noopener"><?php the_title(); ?></a></h3>
+        <h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
     </div>
 <?php endwhile; ?>
 </div>
