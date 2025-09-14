@@ -8,8 +8,9 @@
 $options   = get_option( 'vc_pdfjs_options', array() );
 $logo_id   = isset( $options['logo_id'] ) ? intval( $options['logo_id'] ) : 0;
 $logo_url  = $logo_id ? wp_get_attachment_image_url( $logo_id, 'full' ) : '';
-$viewer    = isset( $options['viewer_url'] ) ? $options['viewer_url'] : '';
 $params    = isset( $options['viewer_params'] ) ? $options['viewer_params'] : '';
+// Use the bundled PDF.js viewer directly from the plugin.
+$viewer    = plugin_dir_url( dirname( __DIR__ ) ) . 'pdfjs-5-4-149/web/viewer.html';
 $pdf_id    = get_post_meta( get_the_ID(), '_vc_pdf_id', true );
 $pdf_url   = $pdf_id ? wp_get_attachment_url( $pdf_id ) : '';
 
@@ -19,8 +20,8 @@ if ( $pdf_url ) {
     $pdf_url  = home_url( $pdf_path );
 }
 
-$iframe_src = $pdf_url;
-if ( $viewer && $pdf_url ) {
+$iframe_src = '';
+if ( $pdf_url ) {
     $iframe_src = $viewer . '?file=' . rawurlencode( $pdf_url ) . $params;
 }
 ?>
