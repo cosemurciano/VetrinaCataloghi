@@ -1,0 +1,22 @@
+.vc-cataloghi-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 600px) {
+    .vc-cataloghi-grid {
+        grid-template-columns: repeat(var(--vc-columns, 3), 1fr);
+    }
+}
+.vc-cataloghi-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.vc-cataloghi-item h3 {
+    font-size: 1.1em;
+    margin-top: 0.5em;
+}
+.vc-cataloghi-item a {
+    text-decoration: none;
+}
