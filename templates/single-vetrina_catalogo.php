@@ -12,6 +12,13 @@ $viewer    = isset( $options['viewer_url'] ) ? $options['viewer_url'] : '';
 $params    = isset( $options['viewer_params'] ) ? $options['viewer_params'] : '';
 $pdf_id    = get_post_meta( get_the_ID(), '_vc_pdf_id', true );
 $pdf_url   = $pdf_id ? wp_get_attachment_url( $pdf_id ) : '';
+
+// Force the PDF URL to use the current site's domain.
+if ( $pdf_url ) {
+    $pdf_path = wp_parse_url( $pdf_url, PHP_URL_PATH );
+    $pdf_url  = home_url( $pdf_path );
+}
+
 $iframe_src = $pdf_url;
 if ( $viewer && $pdf_url ) {
     $iframe_src = $viewer . '?file=' . rawurlencode( $pdf_url ) . $params;
