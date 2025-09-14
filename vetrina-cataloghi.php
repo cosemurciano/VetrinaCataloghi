@@ -282,6 +282,37 @@ function vc_single_template( $template ) {
 add_filter( 'single_template', 'vc_single_template' );
 
 /**
+ * Load custom template for catalog categories taxonomy.
+ *
+ * @param string $template Current template.
+ * @return string Template path.
+ */
+function vc_taxonomy_template( $template ) {
+    if ( is_tax( 'categoria_cataloghi' ) ) {
+        $custom = plugin_dir_path( __FILE__ ) . 'templates/taxonomy-categoria_cataloghi.php';
+        if ( file_exists( $custom ) ) {
+            return $custom;
+        }
+    }
+    return $template;
+}
+add_filter( 'taxonomy_template', 'vc_taxonomy_template' );
+
+/**
+ * Set posts per page for catalog archives and taxonomy listings.
+ *
+ * @param WP_Query $query The WP_Query instance.
+ */
+function vc_cataloghi_posts_per_page( $query ) {
+    if ( ! is_admin() && $query->is_main_query() ) {
+        if ( $query->is_post_type_archive( 'vetrina_catalogo' ) || $query->is_tax( 'categoria_cataloghi' ) ) {
+            $query->set( 'posts_per_page', 20 );
+        }
+    }
+}
+add_action( 'pre_get_posts', 'vc_cataloghi_posts_per_page' );
+
+/**
  * Register settings for PDF.js viewer.
  */
 function vc_register_settings() {
