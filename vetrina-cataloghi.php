@@ -284,7 +284,6 @@ add_action( 'admin_init', 'vc_register_settings' );
  */
 function vc_sanitize_options( $input ) {
     $output = array();
-    $output['viewer_url']    = isset( $input['viewer_url'] ) ? esc_url_raw( $input['viewer_url'] ) : '';
     $output['viewer_params'] = isset( $input['viewer_params'] ) ? sanitize_text_field( $input['viewer_params'] ) : '';
     $output['logo_id']       = isset( $input['logo_id'] ) ? intval( $input['logo_id'] ) : 0;
     return $output;
@@ -312,7 +311,6 @@ function vc_render_settings_page() {
     $options   = get_option( 'vc_pdfjs_options', array() );
     $logo_id   = isset( $options['logo_id'] ) ? intval( $options['logo_id'] ) : 0;
     $logo_url  = $logo_id ? wp_get_attachment_url( $logo_id ) : '';
-    $viewer_url = isset( $options['viewer_url'] ) ? esc_url( $options['viewer_url'] ) : '';
     $params     = isset( $options['viewer_params'] ) ? esc_attr( $options['viewer_params'] ) : '';
     ?>
     <div class="wrap">
@@ -320,10 +318,6 @@ function vc_render_settings_page() {
         <form method="post" action="options.php">
             <?php settings_fields( 'vc_pdfjs_settings' ); ?>
             <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="vc-viewer-url"><?php esc_html_e( 'URL viewer PDF.js', 'vetrina-cataloghi' ); ?></label></th>
-                    <td><input type="text" id="vc-viewer-url" name="vc_pdfjs_options[viewer_url]" value="<?php echo esc_attr( $viewer_url ); ?>" class="regular-text" /></td>
-                </tr>
                 <tr>
                     <th scope="row"><label for="vc-viewer-params"><?php esc_html_e( 'Parametri viewer', 'vetrina-cataloghi' ); ?></label></th>
                     <td><input type="text" id="vc-viewer-params" name="vc_pdfjs_options[viewer_params]" value="<?php echo $params; ?>" class="regular-text" />
