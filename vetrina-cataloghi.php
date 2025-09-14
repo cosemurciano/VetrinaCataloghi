@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Vetrina Cataloghi
  * Description: Gestisce un custom post type "Vetrina Cataloghi" con categorie e upload di file PDF.
- * Version: 1.1.1
- * Author: OpenAI ChatGPT
+ * Version: 1.5
+ * Author: Cosè Murciano
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
