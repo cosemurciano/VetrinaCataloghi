@@ -88,6 +88,15 @@ function vc_add_pdf_metabox() {
         'vetrina_catalogo',
         'side'
     );
+
+    add_meta_box(
+        'vc_info_metabox',
+        __( 'Testo informativo', 'vetrina-cataloghi' ),
+        'vc_info_metabox_callback',
+        'vetrina_catalogo',
+        'normal',
+        'default'
+    );
 }
 add_action( 'add_meta_boxes', 'vc_add_pdf_metabox' );
 
@@ -149,27 +158,55 @@ function vc_pdf_metabox_callback( $post ) {
 }
 
 /**
+ * Callback for info text metabox.
+ *
+ * @param WP_Post $post The post object.
+ */
+function vc_info_metabox_callback( $post ) {
+    wp_nonce_field( 'vc_save_info', 'vc_info_nonce' );
+    $info_text = get_post_meta( $post->ID, '_vc_info_text', true );
+    ?>
+    <p>
+        <textarea name="vc_info_text" id="vc-info-text" rows="5" style="width:100%;"><?php echo esc_textarea( $info_text ); ?></textarea>
+    </p>
+    <p class="description"><?php esc_html_e( 'Se compilato, sovrascrive il testo informativo delle impostazioni PDF.js.', 'vetrina-cataloghi' ); ?></p>
+    <?php
+}
+
+/**
  * Saves the PDF meta.
  *
  * @param int $post_id The post ID.
  */
 function vc_save_pdf_meta( $post_id ) {
-    if ( ! isset( $_POST['vc_pdf_nonce'] ) || ! wp_verify_nonce( $_POST['vc_pdf_nonce'], 'vc_save_pdf' ) ) {
-        return;
-    }
     if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
         return;
     }
-    if ( isset( $_POST['post_type'] ) && 'vetrina_catalogo' === $_POST['post_type'] ) {
-        if ( ! current_user_can( 'edit_post', $post_id ) ) {
-            return;
+    if ( ! isset( $_POST['post_type'] ) || 'vetrina_catalogo' !== $_POST['post_type'] ) {
+        return;
+    }
+    if ( ! current_user_can( 'edit_post', $post_id ) ) {
+        return;
+    }
+    $pdf_nonce_valid  = isset( $_POST['vc_pdf_nonce'] ) && wp_verify_nonce( $_POST['vc_pdf_nonce'], 'vc_save_pdf' );
+    $info_nonce_valid = isset( $_POST['vc_info_nonce'] ) && wp_verify_nonce( $_POST['vc_info_nonce'], 'vc_save_info' );
+
+    if ( $pdf_nonce_valid ) {
+        $pdf_id = isset( $_POST['vc_pdf_id'] ) ? intval( $_POST['vc_pdf_id'] ) : 0;
+        if ( $pdf_id ) {
+            update_post_meta( $post_id, '_vc_pdf_id', $pdf_id );
+        } else {
+            delete_post_meta( $post_id, '_vc_pdf_id' );
         }
     }
-    $pdf_id = isset( $_POST['vc_pdf_id'] ) ? intval( $_POST['vc_pdf_id'] ) : 0;
-    if ( $pdf_id ) {
-        update_post_meta( $post_id, '_vc_pdf_id', $pdf_id );
-    } else {
-        delete_post_meta( $post_id, '_vc_pdf_id' );
+
+    if ( $info_nonce_valid ) {
+        $info_text = isset( $_POST['vc_info_text'] ) ? wp_kses_post( wp_unslash( $_POST['vc_info_text'] ) ) : '';
+        if ( '' !== trim( $info_text ) ) {
+            update_post_meta( $post_id, '_vc_info_text', $info_text );
+        } else {
+            delete_post_meta( $post_id, '_vc_info_text' );
+        }
     }
 }
 add_action( 'save_post', 'vc_save_pdf_meta' );
@@ -335,6 +372,7 @@ function vc_sanitize_options( $input ) {
     foreach ( $available_features as $feature ) {
         $output['features'][ $feature ] = ! empty( $input['features'][ $feature ] ) ? 1 : 0;
     }
+    $output['info_text'] = isset( $input['info_text'] ) ? wp_kses_post( wp_unslash( $input['info_text'] ) ) : '';
     return $output;
 }
 
@@ -390,6 +428,7 @@ function vc_render_settings_page() {
     $logo_id   = isset( $options['logo_id'] ) ? intval( $options['logo_id'] ) : 0;
     $logo_url  = $logo_id ? wp_get_attachment_url( $logo_id ) : '';
     $features  = isset( $options['features'] ) ? (array) $options['features'] : array();
+    $info_text = isset( $options['info_text'] ) ? $options['info_text'] : '';
     $available_features = array(
         'toolbar'          => __( 'Toolbar', 'vetrina-cataloghi' ),
         'navpanes'         => __( 'Pannello di navigazione', 'vetrina-cataloghi' ),
@@ -428,6 +467,13 @@ function vc_render_settings_page() {
                             <button type="button" class="button" id="vc-upload-logo"><?php esc_html_e( 'Carica logo', 'vetrina-cataloghi' ); ?></button>
                             <button type="button" class="button" id="vc-remove-logo" <?php echo $logo_url ? '' : 'style="display:none;"'; ?>><?php esc_html_e( 'Rimuovi', 'vetrina-cataloghi' ); ?></button>
                         </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e( 'Testo informativo', 'vetrina-cataloghi' ); ?></th>
+                    <td>
+                        <textarea name="vc_pdfjs_options[info_text]" rows="5" class="large-text"><?php echo esc_textarea( $info_text ); ?></textarea>
+                        <p class="description"><?php esc_html_e( 'Testo mostrato nel catalogo subito dopo il titolo. Può essere sovrascritto dal singolo catalogo.', 'vetrina-cataloghi' ); ?></p>
                     </td>
                 </tr>
             </table>
