@@ -57,7 +57,7 @@ if ( $pdf_url ) {
             <?php endif; ?>
             <h1 class="vc-title"><?php the_title(); ?></h1>
             <?php if ( ! empty( $info_text ) ) : ?>
-                <div class="vc-info-text"><?php echo wp_kses_post( wpautop( $info_text ) ); ?></div>
+                <div class="vc-info-text"><?php echo apply_filters( 'the_content', $info_text ); ?></div>
             <?php endif; ?>
             <div class="vc-content"><?php the_content(); ?></div>
         </div>
